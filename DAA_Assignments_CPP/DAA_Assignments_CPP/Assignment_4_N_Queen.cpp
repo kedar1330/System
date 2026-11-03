@@ -1,61 +1,118 @@
-#include <iostream>
-#include <vector>
+#include<bits/stdc++.h>
 using namespace std;
 
-bool isSafe(const vector<vector<int>>& arr, int x, int y, int n) {
-    for (int row = 0; row < x; row++) {
-        if (arr[row][y] == 1) return false;
-    }
 
-    int row = x, col = y;
-    while (row >= 0 && col >= 0) {
-        if (arr[row][col] == 1) return false;
+/// using Backtracking 
+bool isItSafe(int row,int col,vector<string>&board,int n){
+    int preRow=row;
+    int preCol=col;
+
+    while(row>=0 && col>=0){
+        if(board[row][col]=='Q'){
+            return false;
+        }
         row--;
         col--;
     }
 
-    row = x;
-    col = y;
-    while (row >= 0 && col < n) {
-        if (arr[row][col] == 1) return false;
-        row--;
-        col++;
+    row=preRow;
+    col=preCol;
+
+    while(col>=0){
+        if(board[row][col]=='Q'){
+            return false;
+        }
+        col--;
+    }
+
+    row=preRow;
+    col=preCol;
+    while(row<n && col>=0){
+        if(board[row][col]=='Q'){
+            return false;
+        }
+        row++;
+        col--;
     }
 
     return true;
 }
 
-bool nQueen(vector<vector<int>>& arr, int x, int n) {
-    if (x >= n) return true;
 
-    for (int col = 0; col < n; col++) {
-        if (isSafe(arr, x, col, n)) {
-            arr[x][col] = 1;
-            if (nQueen(arr, x + 1, n)) return true;
-            arr[x][col] = 0;
+void solve(int col,vector<string>&board,vector<vector<string>>&ans,int n){
+    if(col==n){
+        ans.push_back(board);
+        return;
+    }
+    else{
+        for(int i=0;i<n;i++){ //O(N)
+            if(isItSafe(i,col,board,n)){ //O(N)  -->> O(N2)
+                board[i][col]='Q';
+                solve(col+1,board,ans,n);
+                //backtrack
+                board[i][col]='.';
+            }
         }
     }
-    return false;
 }
 
-int main() {
-    int n;
-    cin >> n;
+//using branch and bound 
 
-    if (n <= 0) {
-        cout << "Please enter a positive integer." << endl;
-        return 1;
+void solve(int col,vector<int>&Left,vector<int>LeftDiag,vector<int>RightDiag,vector<string>&board,vector<vector<string>>&ans,int n){
+    if(col==n){
+        ans.push_back(board);
+        return;
     }
 
-    vector<vector<int>> arr(n, vector<int>(n, 0));
-
-    if (nQueen(arr, 0, n)) {
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) cout << arr[i][j] << " ";
-            cout << endl;
+    else{
+        for(int i=0;i<n;i++){
+            if(Left[i]==0 && LeftDiag[i+col]==0 && RightDiag[i-col+n-1]==0){
+                board[i][col]='Q';
+                Left[i]=1;
+                LeftDiag[i+col]=1;
+                RightDiag[i-col+n-1]=1;
+                //backtrack
+                solve(col+1,Left,LeftDiag,RightDiag,board,ans,n);
+                board[i][col]='.';
+                Left[i]=0;
+                LeftDiag[i+col]=0;
+                RightDiag[i-col+n-1]=0;
+            }
         }
-    } else {
-        cout << "not possible" << endl;
+    }
+}
+
+
+int main(){
+    int n;
+    cout<<"Enter the size of n"<<endl;
+    cin>>n;
+    vector<vector<string>>ans;
+    vector<string>board(n);
+    string s(n,'.');
+    for(int i=0;i<n;i++){
+        board[i]=s;
+    }
+
+    solve(0,board,ans,n);
+
+    ///using branch and bound --->> we are bounding our branches 
+
+    vector<int>Left(n,0);
+
+    //left diagonal
+    vector<int>LeftDiag(2*n-1,0);
+
+    //right diagonal
+
+    vector<int>RightDiag(2*n-1,0);
+
+    // solve(0,Left,LeftDiag,RightDiag,board,ans,n);
+    for(const auto row:ans){
+        for(const auto val:row){
+            cout<<val<<endl;
+        }
+        cout<<endl;
     }
     return 0;
 }
